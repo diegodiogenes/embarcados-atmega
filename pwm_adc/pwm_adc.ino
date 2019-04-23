@@ -19,21 +19,20 @@ int main()
   // valor inicial da variável auxiliar
   uint16_t valorAD = 0;
 
-  DDRB  &= 0b11111110;  //Pino PB0 como entrada
-  DDRC &= 0b0;
+  //Atribui o pino PC0 (pin A0) como sendo input para a entrada analógica, PC0 também é o ADC0
+  DDRC = 0b0;
 
   //Configuração do AD
-  ADMUX  |= _BV(REFS0); //Utiliza VCC como referência e PC0 como entrada analog
-  ADCSRA |= _BV(ADEN);  //Habilita o AD
+  ADMUX  |= _BV(REFS0); //Utiliza VCC como referência (5V) e PC0 como entrada analog
+  ADCSRA |= _BV(ADEN) | //Habilita o AD
+            0b00000111; //Seta o Prescaler como 128, me dando um limite máximo de 15 kSPS na conversão
 
   while (1)
   {
-    if (PINB & 0x01)
-    {
-      ADCSRA |= _BV(ADSC);
-      while (!(ADCSRA & 0x10));
-      valorAD = ADC;
-      OCR1A = valorAD;
-    }
+    ADCSRA |= _BV(ADSC); //Inicia a conversão AD
+    while (!(ADCSRA & 0b00010000)); //Aguarda a conversão AD terminar, checando o bit ADIF
+    valorAD = ADC;
+    //Atribui o valor da conversão a saída
+    OCR1A = valorAD;
   }
 }
